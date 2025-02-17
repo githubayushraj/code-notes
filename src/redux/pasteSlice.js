@@ -35,6 +35,7 @@ export const pasteSlice = createSlice({
       if (idx >= 0) {
         state.value[idx] = newData;
         localStorage.setItem("paste", JSON.stringify(state.value));
+        toast("Edit succussfully!");
       }
       else{
         toast("Edit failed!")

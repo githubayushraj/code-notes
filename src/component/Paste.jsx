@@ -14,17 +14,18 @@ const Paste = () => {
     item.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Edit
+  // Handlers
   function handleEdit(pasteId) {
     dispatch(updateCode(pasteId));
   }
-
-  // Delete
+  
   function handleDelete(pasteId) {
-    dispatch(removeCode({ _id: pasteId }));
+    if (window.confirm("Are you sure you want to delete this?")) {
+      dispatch(removeCode({ _id: pasteId }));
+    }
   }
+  
 
-  // Copy
   function handleCopy(content) {
     navigator.clipboard
       .writeText(content)
@@ -32,20 +33,20 @@ const Paste = () => {
       .catch(() => toast("Failed to copy content!"));
   }
 
-  // Share
   function handleShare(paste) {
     const shareUrl = `${window.location.origin}/?pasteId=${paste._id}`;
-    
     if (navigator.share) {
-      navigator.share({
-        title: paste.title,
-        text: paste.content,
-        url: shareUrl,
-      })
+      navigator
+        .share({
+          title: paste.title,
+          text: paste.content,
+          url: shareUrl,
+        })
         .then(() => toast("Shared successfully!"))
         .catch((error) => toast(`Error sharing: ${error}`));
     } else {
-      navigator.clipboard.writeText(shareUrl)
+      navigator.clipboard
+        .writeText(shareUrl)
         .then(() => toast("Share URL copied to clipboard"))
         .catch(() => toast("Failed to copy URL"));
     }
@@ -54,9 +55,10 @@ const Paste = () => {
   return (
     <div className="min-h-screen bg-gray-800 p-4">
       <div className="max-w-screen-lg mx-auto">
+        {/* Search Input */}
         <div className="mb-4 flex justify-center">
-          <input 
-            className="p-2 rounded w-1/3 text-gray-300 bg-gray-700"
+          <input
+            className="p-2 rounded w-1/3 text-gray-300 bg-gray-700 focus:outline-none"
             type="text"
             placeholder="Search here"
             value={searchTerm}
@@ -64,75 +66,79 @@ const Paste = () => {
           />
         </div>
 
+        {/* Paste List */}
         <div className="flex flex-col gap-5">
           {filterData.length > 0 &&
-            filterData.map((paste) => (
-              <div
-                key={paste._id}
-                className="w-11/12 mx-auto h-48 p-3 border border-gray-600 rounded-lg bg-gray-700 text-gray-300 flex flex-row justify-between"
-              >
-                {/* Left column: title, content, date */}
-                <div className="flex flex-col justify-between flex-1 pr-4">
-                  <div>
-                    <h3 className="font-bold truncate text-gray-300">{paste.title}</h3>
-                    {/* Content container with max height and vertical scroll */}
-                    <div className="mt-2 max-h-20 overflow-y-auto">
+            filterData.map((paste) => {
+              const formattedDate = new Date(paste.createAt)
+                .toLocaleDateString('en-GB', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })
+                .toLowerCase();
+
+              return (
+                <div
+                  key={paste._id}
+                  className="relative w-11/12 mx-auto p-3 border border-gray-600 rounded-lg bg-gray-700 text-gray-300 flex flex-col md:flex-row justify-between h-40 md:h-48"
+                >
+                  {/* Left Column: Title & Content */}
+                  <div className="flex-1 md:pr-4 flex flex-col overflow-hidden">
+                    <h3 className="font-bold text-gray-300 break-words">
+                      {paste.title}
+                    </h3>
+                    <div className="flex-1 mt-2 overflow-y-auto">
                       <p className="text-gray-300 break-words">
                         {paste.content}
                       </p>
                     </div>
                   </div>
-                  <div className="text-gray-400 text-xs mt-2">
-                    {new Date(paste.createAt)
-                      .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                      .toLowerCase()}
+
+                  {/* Right Column: Icons */}
+                  <div className="flex flex-row md:flex-col gap-2 items-center justify-start mt-3 md:mt-0">
+                    <NavLink
+                      to={`/?pasteId=${paste._id}`}
+                      className="text-white p-2 border rounded-md transition hover:bg-gray-600"
+                    >
+                      <FaEdit className="w-3 h-2" />
+                    </NavLink>
+                    <NavLink
+                      to={`/view/${paste._id}`}
+                      className="text-white p-2 border rounded-md transition hover:bg-gray-600"
+                    >
+                      <FaEye className="w-3 h-2" />
+                    </NavLink>
+                    <button
+                      onClick={() => handleCopy(paste.content)}
+                      className="text-white p-2 border rounded-md transition hover:bg-gray-600"
+                    >
+                      <FaCopy className="w-3 h-2" />
+                    </button>
+                    <button
+                      onClick={() => handleShare(paste)}
+                      className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition"
+                    >
+                      <FaShare className="w-3 h-2" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(paste._id)}
+                      className="text-white p-2 border rounded-md transition hover:bg-gray-600"
+                    >
+                      <FaTrash className="w-3 h-2" />
+                    </button>
+                  </div>
+
+                  {/* Date: Mobile view at bottom-right, Desktop view at bottom-left */}
+                  <div className="absolute bottom-2 right-2 text-xs text-gray-400 md:hidden">
+                    {formattedDate}
+                  </div>
+                  <div className="hidden md:block absolute top-2 right-2 mr-15 text-xs text-gray-400">
+                    {formattedDate}
                   </div>
                 </div>
-                {/* Right column: vertical icons */}
-                <div className="flex flex-col gap-2 items-center justify-start">
-                  {/* Edit */}
-                  <NavLink 
-                    to={`/?pasteId=${paste._id}`}
-                    className="text-white p-2 border rounded-md transition hover:bg-gray-600"
-                  >
-                    <FaEdit className="w-2 h-2" />
-                  </NavLink>
-
-                  {/* View */}
-                  <NavLink 
-                    to={`/view/${paste._id}`}
-                    className="text-white p-2 border rounded-md transition hover:bg-gray-600"
-                  >
-                    <FaEye className="w-2 h-2" />
-                  </NavLink>
-
-                  {/* Copy */}
-                  <button 
-                    onClick={() => handleCopy(paste.content)}
-                    className="text-white p-2 border rounded-md transition hover:bg-gray-600"
-                  >
-                    <FaCopy className="w-2 h-2" />
-                  </button>
-
-                  {/* Share */}
-                  <button
-                    onClick={() => handleShare(paste)}
-                    className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition"
-                  >
-                    <FaShare className="w-2 h-2" />
-                  </button>
-
-                  {/* Delete */}
-                  <button 
-                    onClick={() => handleDelete(paste._id)}
-                    className="text-white p-2 border rounded-md transition hover:bg-gray-600"
-                  >
-                    <FaTrash className="w-2 h-2" />
-                  </button>
-                </div>
-              </div>
-            ))
-          }
+              );
+            })}
         </div>
       </div>
     </div>
