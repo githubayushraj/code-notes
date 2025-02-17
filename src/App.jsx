@@ -1,6 +1,9 @@
 import React from 'react';  
 import { useState } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'; 
+// for toast
+import { Toaster } from 'react-hot-toast';
+
 
 import './App.css';
 import Navbar from './component/Navbar';
@@ -32,10 +35,21 @@ const router = createBrowserRouter([
     element: (
       <div>
         <Navbar />
+      </div>
+    ),
+  },
+
+  {
+    path: "/view/:id",
+    element: (
+      <div>
+        <Navbar />
         <View />
       </div>
     ),
   },
+  
+  
 ]);
 
 function App() {
@@ -44,6 +58,7 @@ function App() {
   return (
     <>
       <RouterProvider router={router} />
+      <Toaster/>
     </>
   );
 }
